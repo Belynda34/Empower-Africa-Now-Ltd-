@@ -24,9 +24,16 @@ const PostsList: React.FC = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
+  // useEffect(() => {
+  //   dispatch(fetchPosts());
+  // }, [dispatch]);
+
   useEffect(() => {
+  if (posts.length === 0) {
     dispatch(fetchPosts());
-  }, [dispatch]);
+  }
+}, [dispatch, posts.length]);
+
 
   const indexOfLastPost = currentPage * postsPerPage;
   const currentPosts = posts.slice(

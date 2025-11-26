@@ -18,26 +18,49 @@ const PostForm: React.FC<Props> = ({ editMode = false }) => {
   const [body, setBody] = useState("");
   const [successMessage, setSuccessMessage] = useState(""); // ✅ for toast
 
+
+  // Fetch post whenever postId changes
+  // useEffect(() => {
+  //   if (postId) {
+  //     dispatch(fetchPostById(postId));
+  //   }
+  // }, [dispatch, postId]);
+
+
   useEffect(() => {
     if (editMode && postId) {
-      dispatch(fetchPostById(postId));
+      if (!selectedPost || selectedPost.id !== postId) {
+        dispatch(fetchPostById(postId));
+      }
     }
-  }, [dispatch, editMode, postId]);
+  }, [dispatch, editMode, postId, selectedPost]);
 
+
+  // Sync form fields with selectedPost
   useEffect(() => {
     if (editMode && selectedPost) {
       setTitle(selectedPost.title);
       setBody(selectedPost.body);
     }
-  }, [editMode, selectedPost]);
+  }, [editMode,selectedPost]);
+
+
+  // Clear form when switching to create mode
+  useEffect(() => {
+    if (!editMode) {
+      setTitle("");
+      setBody("");
+    }
+  }, [editMode]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (editMode && postId) {
-      await dispatch(updatePost({ id: postId, title, body }));
+      await dispatch(updatePost({ id: postId,data : { title, body} }));
       setSuccessMessage("Post updated successfully!");
-      setTimeout(() => navigate(`/posts/${postId}`), 1500);
+      setTimeout(() => navigate(`/`), 1500);
     } else {
       await dispatch(createPost({ title, body }));
       setSuccessMessage("Post created successfully!");
@@ -72,6 +95,7 @@ const PostForm: React.FC<Props> = ({ editMode = false }) => {
             className="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition"
             placeholder="Enter post title..."
             required
+            disabled={loading}
           />
         </div>
 
@@ -85,6 +109,7 @@ const PostForm: React.FC<Props> = ({ editMode = false }) => {
             placeholder="Write your post content..."
             rows={6}
             required
+            disabled={loading}
           />
         </div>
 
