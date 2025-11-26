@@ -1,5 +1,5 @@
 // src/features/posts/postsSlice.ts
-import { createAsyncThunk, createSlice, } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { Post } from "./types";
 import {
@@ -15,13 +15,15 @@ interface PostsState {
   selectedPost: Post | null;
   loading: boolean;
   error: string | null;
+  successMessage: string | null; // <-- for showing success notifications
 }
 
 const initialState: PostsState = {
   items: [],
   selectedPost: null,
   loading: false,
-  error: null
+  error: null,
+  successMessage: null
 };
 
 // Async thunks
@@ -89,6 +91,11 @@ const postsSlice = createSlice({
   reducers: {
     clearSelected: (state) => {
       state.selectedPost = null;
+      state.successMessage = null;
+      state.error = null;
+    },
+    clearSuccessMessage: (state) => {
+      state.successMessage = null;
     }
   },
   extraReducers: (builder) => {
@@ -97,6 +104,7 @@ const postsSlice = createSlice({
       .addCase(fetchPosts.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.successMessage = null;
       })
       .addCase(fetchPosts.fulfilled, (state, action: PayloadAction<Post[]>) => {
         state.items = action.payload;
@@ -127,11 +135,12 @@ const postsSlice = createSlice({
       .addCase(createPost.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.successMessage = null;
       })
       .addCase(createPost.fulfilled, (state, action: PayloadAction<Post>) => {
-        // jsonplaceholder returns created object with id
         state.items.unshift(action.payload);
         state.loading = false;
+        state.successMessage = "Post created successfully!";
       })
       .addCase(createPost.rejected, (state, action) => {
         state.loading = false;
@@ -143,12 +152,17 @@ const postsSlice = createSlice({
       .addCase(updatePost.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.successMessage = null;
       })
       .addCase(updatePost.fulfilled, (state, action: PayloadAction<Post>) => {
-        const idx = state.items.findIndex(p => p.id === action.payload.id);
+        const idx = state.items.findIndex((p) => p.id === action.payload.id);
         if (idx >= 0) state.items[idx] = action.payload;
-        if (state.selectedPost?.id === action.payload.id) state.selectedPost = action.payload;
+
+        // Always update selectedPost
+        state.selectedPost = action.payload;
+
         state.loading = false;
+        state.successMessage = "Post updated successfully!";
       })
       .addCase(updatePost.rejected, (state, action) => {
         state.loading = false;
@@ -160,11 +174,13 @@ const postsSlice = createSlice({
       .addCase(deletePost.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.successMessage = null;
       })
       .addCase(deletePost.fulfilled, (state, action: PayloadAction<number>) => {
-        state.items = state.items.filter(p => p.id !== action.payload);
+        state.items = state.items.filter((p) => p.id !== action.payload);
         if (state.selectedPost?.id === action.payload) state.selectedPost = null;
         state.loading = false;
+        state.successMessage = "Post deleted successfully!";
       })
       .addCase(deletePost.rejected, (state, action) => {
         state.loading = false;
@@ -173,5 +189,5 @@ const postsSlice = createSlice({
   }
 });
 
-export const { clearSelected } = postsSlice.actions;
+export const { clearSelected, clearSuccessMessage } = postsSlice.actions;
 export default postsSlice.reducer;
